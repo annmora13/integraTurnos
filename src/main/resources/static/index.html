@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>¡Bienvenido Integrer!</title>
+    <style>
+        body {
+            background-color: white;
+            text-align: center;
+            margin-top: 120px;
+            font-family: monospace;
+        }
+
+        img {
+            width: 150px;
+        }
+
+        #texto {
+            font-size: 30px;
+            font-weight: bold;
+            color: rgb(128, 0, 32);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="image_02bf97.png" alt="Logo">
+
+    <div id="texto"></div>
+
+    <script>
+        const mensaje = "¡Bienvenido Integrer!";
+        let i = 0;
+
+        function escribir() {
+            if (i < mensaje.length) {
+                document.getElementById("texto").innerHTML += mensaje.charAt(i);
+                i++;
+                setTimeout(escribir, 120);
+            }
+        }
+
+        escribir();
+    </script>
+<br><br>
+
+<button onclick="irEmpresas()" style="
+    padding: 12px 25px;
+    font-size: 18px;
+    background-color: rgb(128, 0, 32);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+">
+    Ingresar
+</button>
+
+<script>
+    function irEmpresas() {
+        window.location.href = "/empresas.html";
+    }
+</script>
+</body>
+</html>
