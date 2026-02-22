@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Condominios</title>
+
+    <style>
+        body {
+            font-family: monospace;
+            text-align: center;
+            margin-top: 80px;
+            background-color: #f8f8f8;
+        }
+
+        h1 {
+            color: rgb(128, 0, 32);
+            margin-bottom: 40px;
+        }
+
+        .contenedor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .empresa-btn {
+            width: 260px;
+            padding: 20px;
+            font-size: 18px;
+            border-radius: 15px;
+            border: 2px solid rgb(128, 0, 32);
+            cursor: pointer;
+            transition: 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .vino {
+            background-color: rgb(128, 0, 32);
+            color: white;
+        }
+
+        .invertido {
+            background-color: white;
+            color: rgb(128, 0, 32);
+        }
+
+        .empresa-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Condominios</h1>
+
+<div class="contenedor">
+
+    <a th:if="${empresas != null and !empresas.isEmpty()}"
+       th:each="empresa, iterStat : ${empresas}"
+       th:href="@{'/empresas/' + ${empresa.id} + '/comprobantes'}"
+       th:text="${empresa.nombre}"
+       th:class="'empresa-btn ' + (${iterStat.index} % 2 == 0 ? 'vino' : 'invertido')">
+    </a>
+
+    <p th:if="${empresas == null or empresas.isEmpty()}">
+        No hay comunidades registradas.
+    </p>
+
+</div>
+
+</body>
+</html>

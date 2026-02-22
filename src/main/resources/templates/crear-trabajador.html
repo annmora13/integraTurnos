@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Crear Trabajador</title>
+</head>
+<body>
+
+<h1>Nuevo Trabajador</h1>
+
+<form th:action="@{/trabajadores/guardar}" th:object="${trabajador}" method="post">
+    
+    <label>Nombre:</label>
+    <input type="text" th:field="*{nombre}" required/>
+
+    <br><br>
+
+    <button type="submit">Guardar</button>
+
+</form>
+
+</body>
+</html>

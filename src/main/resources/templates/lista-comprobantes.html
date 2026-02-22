@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Comprobantes</title>
+</head>
+<body>
+
+<h1>Comprobantes</h1>
+
+<a th:href="@{'/empresas/' + ${empresaId} + '/comprobantes/nuevo'}">
+    Nuevo comprobante
+</a>
+
+<br><br>
+
+<table border="1">
+    <tr>
+        <th>Trabajador</th>
+        <th>Mes</th>
+        <th>Año</th>
+        <th>Total</th>
+    </tr>
+
+    <tr th:each="c : ${comprobantes}">
+        <td th:text="${c.trabajador.nombre}"></td>
+        <td th:text="${c.mes}"></td>
+        <td th:text="${c.anio}"></td>
+        <td th:text="${c.total}"></td>
+    </tr>
+
+</table>
+
+</body>
+</html>
