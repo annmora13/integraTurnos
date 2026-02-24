@@ -1,88 +1,332 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Crear Comprobante</title>
+    <meta charset="UTF-8">
+    <title>Nuevo comprobante</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        .wrap {
+            max-width: 1100px; margin: 30px auto; background: #fff; padding: 24px;
+            border-radius: 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+        }
+        h2 { color: rgb(128, 0, 32); text-align: center; margin-top: 0; }
+
+        .top {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;
+        }
+        label { font-weight: 700; display: block; margin-bottom: 6px; }
+        select, input {
+            width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc;
+        }
+
+        .btn {
+            background: rgb(128, 0, 32); color: #fff; border: none; border-radius: 12px;
+            padding: 10px 14px; cursor: pointer; font-weight: 700;
+        }
+        .btn:hover {
+            background: #fff; color: rgb(128, 0, 32); border: 2px solid rgb(128, 0, 32);
+        }
+
+        .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+        .hidden { display: none; }
+
+        .content {
+            display: grid; grid-template-columns: 650px 1fr; gap: 18px; align-items: start;
+        }
+
+        #calendar { max-width: 650px; margin: 0 auto; }
+        .fc { font-size: 13px; }
+        .fc .fc-daygrid-day-frame { min-height: 65px; }
+
+        .panel {
+            border: 2px solid rgb(128, 0, 32); border-radius: 16px; padding: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .panel h3 { margin: 0 0 10px 0; color: rgb(128, 0, 32); }
+
+        .turno-item {
+            display: grid; grid-template-columns: 1fr 1fr 32px; gap: 8px;
+            align-items: center; margin-bottom: 8px; padding: 8px; border-radius: 12px;
+            background: #fafafa; border: 1px solid #eee;
+        }
+
+        .pill {
+            display: inline-block; padding: 6px 10px; border-radius: 999px;
+            background: rgb(128, 0, 32); color: #fff; font-weight: 700; text-align: center;
+        }
+
+        .danger { color: #b00020; font-weight: 700; margin-top: 10px; }
+        .savebar { margin-top: 14px; }
+    </style>
 </head>
+
 <body>
+<div class="wrap">
+    <h2>Crear nuevo comprobante</h2>
 
-<h1>Crear Comprobante</h1>
+    <form th:action="@{/empresas/{id}/comprobantes/guardar(id=${empresaId})}" method="post" id="formComprobante">
 
-<label>Mes:</label>
-<input type="month" id="mesSeleccionado">
+        <div class="top">
+            <!-- Trabajador -->
+            <div>
+                <label>Trabajador</label>
+                <div class="row">
+                    <select name="trabajadorId" id="trabajadorSelect">
+                        <option value="">Seleccione</option>
+                        <option th:each="t : ${trabajadores}" th:value="${t.id}" th:text="${t.nombre}"></option>
+                    </select>
+                    <button type="button" class="btn" onclick="toggleNuevoTrabajador()">Otro</button>
+                </div>
 
-<br><br>
+                <div id="nuevoTrabajadorDiv" class="row hidden">
+                    <input type="text" name="nuevoTrabajadorNombre" id="nuevoTrabajadorNombre"
+                           placeholder="Nombre del trabajador">
+                </div>
+            </div>
 
-<div id="calendario"></div>
+            <!-- Resumen + Período de pago -->
+            <div>
+                <label>Resumen (según calendario)</label>
+                <div class="row">
+                    <input type="text" id="rangoFechas" readonly placeholder="Selecciona fechas en el calendario">
+                    <input type="text" id="mesesIncluidos" readonly placeholder="Meses incluidos (info)">
+                </div>
 
-<br>
+                <div class="row">
+                    <input type="number" name="anio" id="anioPago" min="2020" max="2100" placeholder="Año de pago" required>
 
-<form id="formTurnos"
-      th:action="@{'/empresas/' + ${empresaId} + '/comprobantes/guardar'}"
-      method="post">
+                    <select name="mes" id="mesPago" required>
+                        <option value="">Mes de pago</option>
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
 
-    <input type="hidden" name="mes" id="mesHidden">
-    <input type="hidden" name="anio" id="anioHidden">
+                    <select name="quincena" id="quincenaPago" required>
+                        <option value="">Quincena</option>
+                        <option value="1">1ra</option>
+                        <option value="2">2da</option>
+                    </select>
+                </div>
 
-    <div id="turnosContainer"></div>
+                <!-- Monto por defecto -->
+                <div class="row">
+                    <input type="number" step="0.01" id="montoDefault" placeholder="Monto por defecto (opcional)">
+                    <button type="button" class="btn" onclick="aplicarMontoDefault()">Aplicar</button>
+                </div>
 
-    <br>
-    <button type="submit">Guardar comprobante</button>
-</form>
+                <div class="row">
+                    <label style="font-weight:600;">
+                        <input type="checkbox" id="confirmo" required>
+                        Confirmo que el rango del calendario es correcto para este comprobante
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="calendar"></div>
+
+            <div class="panel">
+                <h3>Turnos seleccionados</h3>
+                <div id="turnosLista"></div>
+                <div id="msg" class="danger hidden"></div>
+
+                <div class="savebar">
+                    <button type="submit" class="btn" style="width:100%;">Guardar comprobante</button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
 
 <script>
-document.getElementById("mesSeleccionado").addEventListener("change", function() {
-    const valor = this.value; // formato YYYY-MM
-    if (!valor) return;
+    let calendar;
+    const seleccion = new Map(); // fechaStr -> { monto: number|null, dayEl: HTMLElement }
 
-    const [anio, mes] = valor.split("-");
-    document.getElementById("mesHidden").value = mes;
-    document.getElementById("anioHidden").value = anio;
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
 
-    generarCalendario(anio, mes);
-});
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            dateClick: function (info) {
+                const fecha = info.dateStr;
 
-function generarCalendario(anio, mes) {
-    const calendario = document.getElementById("calendario");
-    calendario.innerHTML = "";
+                if (seleccion.has(fecha)) {
+                    const d = seleccion.get(fecha);
+                    if (d && d.dayEl) pintarDia(d.dayEl, false);
+                    seleccion.delete(fecha);
+                } else {
+                    seleccion.set(fecha, { monto: null, dayEl: info.dayEl });
+                    pintarDia(info.dayEl, true);
+                }
+                renderTurnos();
+            }
+        });
 
-    const dias = new Date(anio, mes, 0).getDate();
+        calendar.render();
+        actualizarResumen();
+    });
 
-    for (let i = 1; i <= dias; i++) {
-        const boton = document.createElement("button");
-        boton.type = "button";
-        boton.innerText = i;
-
-        boton.onclick = function() {
-            agregarTurno(anio, mes, i);
-        };
-
-        calendario.appendChild(boton);
+    function pintarDia(dayEl, activo) {
+        if (!dayEl) return;
+        if (activo) {
+            dayEl.style.backgroundColor = "rgb(128,0,32)";
+            dayEl.style.color = "white";
+            dayEl.style.borderRadius = "10px";
+        } else {
+            dayEl.style.backgroundColor = "";
+            dayEl.style.color = "";
+            dayEl.style.borderRadius = "";
+        }
     }
-}
 
-function agregarTurno(anio, mes, dia) {
-    const container = document.getElementById("turnosContainer");
+    function toggleNuevoTrabajador() {
+        const div = document.getElementById("nuevoTrabajadorDiv");
+        div.classList.toggle("hidden");
+        document.getElementById("trabajadorSelect").value = "";
+    }
 
-    const div = document.createElement("div");
+    function renderTurnos() {
+        const lista = document.getElementById("turnosLista");
+        lista.innerHTML = "";
 
-    div.innerHTML =
-        "Día " + dia +
-        " <input type='hidden' name='fechas' value='" + anio + "-" + mes + "-" + dia + "'>" +
-        " Monto: <input type='number' step='0.01' name='montos'>";
+        const ordenadas = Array.from(seleccion.keys()).sort();
 
-    container.appendChild(div);
-}
+        ordenadas.forEach(fecha => {
+            const item = document.createElement("div");
+            item.className = "turno-item";
 
+            const inputFecha = document.createElement("input");
+            inputFecha.type = "hidden";
+            inputFecha.name = "fechas";
+            inputFecha.value = fecha;
+
+            const pill = document.createElement("div");
+            pill.className = "pill";
+            pill.textContent = fecha;
+
+            const inputMonto = document.createElement("input");
+            inputMonto.type = "number";
+            inputMonto.step = "0.01";
+            inputMonto.name = "montos";
+            inputMonto.placeholder = "Monto";
+            inputMonto.required = true;
+
+            const data = seleccion.get(fecha);
+            if (data && data.monto != null) inputMonto.value = data.monto;
+
+            inputMonto.addEventListener("input", () => {
+                const val = inputMonto.value ? Number(inputMonto.value) : null;
+                const d = seleccion.get(fecha);
+                if (d) d.monto = val;
+            });
+
+            const btnX = document.createElement("button");
+            btnX.type = "button";
+            btnX.textContent = "×";
+            btnX.className = "btn";
+            btnX.style.padding = "6px 10px";
+            btnX.onclick = () => {
+                const d = seleccion.get(fecha);
+                if (d && d.dayEl) pintarDia(d.dayEl, false);
+                seleccion.delete(fecha);
+                renderTurnos();
+            };
+
+            item.appendChild(inputFecha);
+            item.appendChild(pill);
+            item.appendChild(inputMonto);
+            item.appendChild(btnX);
+
+            lista.appendChild(item);
+        });
+
+        actualizarResumen();
+    }
+
+    function actualizarResumen() {
+        const fechas = Array.from(seleccion.keys()).sort();
+        const rango = document.getElementById("rangoFechas");
+        const meses = document.getElementById("mesesIncluidos");
+
+        if (fechas.length === 0) {
+            rango.value = "";
+            meses.value = "";
+            return;
+        }
+
+        const inicio = fechas[0];
+        const fin = fechas[fechas.length - 1];
+        rango.value = `${inicio} → ${fin}`;
+
+        const setMeses = new Set(fechas.map(f => f.slice(0, 7))); // YYYY-MM
+        meses.value = Array.from(setMeses).sort().join(", ");
+
+        // sugerencia quincena basada en el día del "fin"
+        const finDay = Number(fin.slice(8, 10));
+        const quincenaSug = finDay <= 15 ? "1" : "2";
+        const q = document.getElementById("quincenaPago");
+        if (q && !q.value) q.value = quincenaSug;
+
+        // sugerencia mes/año de pago: mes/año actual (no del calendario)
+        const hoy = new Date();
+        const mesPago = document.getElementById("mesPago");
+        const anioPago = document.getElementById("anioPago");
+
+        if (anioPago && !anioPago.value) anioPago.value = hoy.getFullYear();
+        if (mesPago && !mesPago.value) mesPago.value = String(hoy.getMonth() + 1);
+    }
+
+    function aplicarMontoDefault() {
+        const def = document.getElementById("montoDefault").value;
+        if (!def) return;
+
+        const val = Number(def);
+        for (const [fecha, data] of seleccion.entries()) {
+            data.monto = val;
+        }
+        renderTurnos();
+    }
+
+    document.getElementById("formComprobante").addEventListener("submit", function (e) {
+        const msg = document.getElementById("msg");
+        msg.classList.add("hidden");
+        msg.textContent = "";
+
+        if (seleccion.size === 0) {
+            e.preventDefault();
+            msg.textContent = "Selecciona al menos una fecha en el calendario.";
+            msg.classList.remove("hidden");
+            return;
+        }
+
+        const trabajadorId = document.getElementById("trabajadorSelect").value;
+        const nuevoNombre = (document.getElementById("nuevoTrabajadorNombre").value || "").trim();
+
+        if (!trabajadorId && nuevoNombre.length < 2) {
+            e.preventDefault();
+            msg.textContent = "Selecciona un trabajador o escribe uno nuevo en “Otro”.";
+            msg.classList.remove("hidden");
+            return;
+        }
+    });
 </script>
-<label>Trabajador:</label>
-<select name="trabajadorId" required>
-    <option value="">Seleccione</option>
-    <option th:each="t : ${trabajadores}"
-            th:value="${t.id}"
-            th:text="${t.nombre}">
-    </option>
-</select>
 
-<br><br>
 </body>
 </html>

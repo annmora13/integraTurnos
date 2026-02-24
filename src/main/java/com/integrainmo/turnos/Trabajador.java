@@ -18,7 +18,7 @@ public class Trabajador {
         joinColumns = @JoinColumn(name = "trabajador_id"),
         inverseJoinColumns = @JoinColumn(name = "empresa_id")
     )
-    private Set<Empresa> empresas;
+    private Set<Empresa> empresas = new java.util.HashSet<>();
 
     public Trabajador() {}
 

@@ -71,4 +71,9 @@ private List<Turno> turnos;
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setTurnos'");
     }
+
+    public void setQuincena(int quincena) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setQuincena'");
+    }
 }

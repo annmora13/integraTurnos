@@ -1,34 +1,137 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title>Comprobantes</title>
+
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #f8f8f8;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        h1 {
+            color: rgb(128,0,32);
+            margin-bottom: 30px;
+        }
+
+        .filtros {
+            margin-bottom: 40px;
+        }
+
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid rgb(128,0,32);
+            margin: 5px;
+        }
+
+        button {
+            background-color: rgb(128,0,32);
+            color: white;
+            cursor: pointer;
+        }
+
+        .contenedor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .comprobante-card {
+            width: 320px;
+            padding: 18px;
+            border-radius: 15px;
+            border: 2px solid rgb(128,0,32);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: white;
+            text-align: left;
+        }
+
+        .comprobante-card:nth-child(even) {
+            background-color: rgb(128,0,32);
+            color: white;
+        }
+
+    </style>
 </head>
+
 <body>
 
-<h1>Comprobantes</h1>
+<h1 th:text="'Comprobantes - ' + ${empresa.nombre}"></h1>
 
-<a th:href="@{'/empresas/' + ${empresaId} + '/comprobantes/nuevo'}">
-    Nuevo comprobante
+<div class="filtros">
+
+    <form th:action="@{'/empresas/' + ${empresa.id} + '/comprobantes'}"
+          method="get">
+
+        <select name="anio" required>
+            <option value="">Año</option>
+            <option>2026</option>
+        </select>
+
+        <select name="trabajadorId" required>
+            <option value="">Trabajador</option>
+            <option th:each="t : ${trabajadores}"
+                    th:value="${t.id}"
+                    th:text="${t.nombre}">
+            </option>
+        </select>
+
+        <button type="submit">Filtrar</button>
+
+    </form>
+
+</div>
+
+<div class="contenedor">
+
+    <div th:each="c : ${comprobantes}"
+         class="comprobante-card">
+
+        <p><strong>Trabajador:</strong>
+            <span th:text="${c.trabajador.nombre}"></span>
+        </p>
+
+        <p><strong>Mes:</strong>
+            <span th:text="${c.mes}"></span>
+        </p>
+
+        <p><strong>Año:</strong>
+            <span th:text="${c.anio}"></span>
+        </p>
+
+    </div>
+
+    <p th:if="${comprobantes.isEmpty()}">
+        No hay comprobantes para ese filtro.
+    </p>
+
+<a th:href="@{/empresas/{id}/comprobantes/nuevo(id=${empresa.id})}"
+   class="btn-nuevo">
+    Generar nuevo comprobante
 </a>
+</div>
+<style>
+.btn-nuevo {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: rgb(128,0,32);
+    color: white;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+}
 
-<br><br>
-
-<table border="1">
-    <tr>
-        <th>Trabajador</th>
-        <th>Mes</th>
-        <th>Año</th>
-        <th>Total</th>
-    </tr>
-
-    <tr th:each="c : ${comprobantes}">
-        <td th:text="${c.trabajador.nombre}"></td>
-        <td th:text="${c.mes}"></td>
-        <td th:text="${c.anio}"></td>
-        <td th:text="${c.total}"></td>
-    </tr>
-
-</table>
-
+.btn-nuevo:hover {
+    background-color: white;
+    color: rgb(128,0,32);
+    border: 2px solid rgb(128,0,32);
+}
+</style>
 </body>
 </html>

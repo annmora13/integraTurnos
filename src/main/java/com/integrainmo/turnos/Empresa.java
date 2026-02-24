@@ -16,7 +16,7 @@ public class Empresa {
 
     private String nombre;
     @ManyToMany(mappedBy = "empresas")
-    private Set<Trabajador> trabajadores;
+    private Set<Trabajador> trabajadores = new java.util.HashSet<>();
 
     public Empresa() {
     }
