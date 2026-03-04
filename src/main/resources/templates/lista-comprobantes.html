@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <meta charset="UTF-8">
     <title>Comprobantes</title>
 
@@ -13,7 +16,7 @@
         }
 
         h1 {
-            color: rgb(128,0,32);
+            color: rgb(128, 0, 32);
             margin-bottom: 30px;
         }
 
@@ -21,16 +24,17 @@
             margin-bottom: 40px;
         }
 
-        select, button {
+        select,
+        button {
             padding: 10px;
             font-size: 16px;
             border-radius: 8px;
-            border: 2px solid rgb(128,0,32);
+            border: 2px solid rgb(128, 0, 32);
             margin: 5px;
         }
 
         button {
-            background-color: rgb(128,0,32);
+            background-color: rgb(128, 0, 32);
             color: white;
             cursor: pointer;
         }
@@ -46,92 +50,231 @@
             width: 320px;
             padding: 18px;
             border-radius: 15px;
-            border: 2px solid rgb(128,0,32);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid rgb(128, 0, 32);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             background-color: white;
             text-align: left;
         }
 
         .comprobante-card:nth-child(even) {
-            background-color: rgb(128,0,32);
+            background-color: rgb(128, 0, 32);
             color: white;
         }
-
     </style>
 </head>
 
-<body>
+<body th:attr="data-empresa-id=${empresaId}">
 
-<h1 th:text="'Comprobantes - ' + ${empresa.nombre}"></h1>
+    <h1 th:text="'Comprobantes - ' + ${empresa.nombre}"></h1>
 
-<div class="filtros">
+    <div class="filtros">
 
-    <form th:action="@{'/empresas/' + ${empresa.id} + '/comprobantes'}"
-          method="get">
+        <form th:action="@{'/empresas/' + ${empresa.id} + '/comprobantes'}" method="get">
 
-        <select name="anio" required>
-            <option value="">Año</option>
-            <option>2026</option>
-        </select>
+            <select name="anio" required>
+                <option value="">Año</option>
+                <option>2026</option>
+            </select>
 
-        <select name="trabajadorId" required>
-            <option value="">Trabajador</option>
-            <option th:each="t : ${trabajadores}"
-                    th:value="${t.id}"
-                    th:text="${t.nombre}">
-            </option>
-        </select>
+            <select name="trabajadorId" required>
+                <option value="">Trabajador</option>
+                <option th:each="t : ${trabajadores}" th:value="${t.id}" th:text="${t.nombre}">
+                </option>
+            </select>
 
-        <button type="submit">Filtrar</button>
+            <button type="submit">Filtrar</button>
 
-    </form>
-
-</div>
-
-<div class="contenedor">
-
-    <div th:each="c : ${comprobantes}"
-         class="comprobante-card">
-
-        <p><strong>Trabajador:</strong>
-            <span th:text="${c.trabajador.nombre}"></span>
-        </p>
-
-        <p><strong>Mes:</strong>
-            <span th:text="${c.mes}"></span>
-        </p>
-
-        <p><strong>Año:</strong>
-            <span th:text="${c.anio}"></span>
-        </p>
+        </form>
 
     </div>
 
-    <p th:if="${comprobantes.isEmpty()}">
-        No hay comprobantes para ese filtro.
-    </p>
+    <div class="contenedor">
 
-<a th:href="@{/empresas/{id}/comprobantes/nuevo(id=${empresa.id})}"
-   class="btn-nuevo">
-    Generar nuevo comprobante
-</a>
-</div>
-<style>
-.btn-nuevo {
-    display: inline-block;
-    padding: 12px 20px;
-    background-color: rgb(128,0,32);
-    color: white;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: bold;
-}
+        <div th:each="c : ${comprobantes}" class="comprobante-card">
 
-.btn-nuevo:hover {
-    background-color: white;
-    color: rgb(128,0,32);
-    border: 2px solid rgb(128,0,32);
-}
-</style>
+            <p><strong>Trabajador:</strong>
+                <span th:text="${c.trabajador.nombre}"></span>
+            </p>
+
+            <p><strong>Mes:</strong>
+                <span th:text="${c.mes}"></span>
+            </p>
+
+            <p><strong>Año:</strong>
+                <span th:text="${c.anio}"></span>
+            </p>
+
+        </div>
+
+        <p th:if="${comprobantes.isEmpty()}">
+            No hay comprobantes para ese filtro.
+        </p>
+
+        <a th:href="@{/empresas/{id}/comprobantes/nuevo(id=${empresa.id})}" class="btn-nuevo">
+            Generar nuevo comprobante
+        </a>
+    </div>
+    <div class="layout">
+        <div class="main">
+            <!-- aquí va tu tabla/lista de comprobantes -->
+        </div>
+
+        <div class="side">
+            <h3>Turnos asignados</h3>
+            <div id="calendarAsignados"></div>
+
+            <div class="leyenda">
+                <span class="dot aseo"></span> Aseo
+                <span class="dot conserje"></span> Conserje
+            </div>
+        </div>
+    </div>
+    <style>
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 500px 1fr;
+            gap: 10px;
+            align-items: start;
+        }
+
+        .side {
+            border: 2px solid rgb(128, 0, 32);
+            border-radius: 16px;
+            padding: 14px;
+            margin-top: 25px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .leyenda {
+            margin-top: 10px;
+            font-size: 12px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 6px;
+        }
+
+        .dot.aseo {
+            background: #2e7d32;
+        }
+
+        .dot.conserje {
+            background: #1565c0;
+        }
+
+        #calendarAsignados .fc {
+            font-size: 12px;
+        }
+
+        #calendarAsignados .fc .fc-daygrid-day-frame {
+            min-height: 55px;
+        }
+
+        .btn-nuevo {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: rgb(128, 0, 32);
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-nuevo:hover {
+            background-color: white;
+            color: rgb(128, 0, 32);
+            border: 2px solid rgb(128, 0, 32);
+        }
+    </style>
+    <script>
+        const empresaId = document.body.dataset.empresaId;
+
+        let asignadosCalendar;
+        let asignadosMap = new Map(); // 'YYYY-MM-DD' -> {aseo, conserje}
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initAsignadosCalendar();
+            hookMesAnio();
+            cargarAsignados(); // carga inicial si hay valores
+        });
+
+        function initAsignadosCalendar() {
+            const el = document.getElementById("calendarAsignados");
+            asignadosCalendar = new FullCalendar.Calendar(el, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                selectable: false,
+                headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+                dayCellDidMount: function (arg) {
+                    const fecha = arg.date.toISOString().slice(0, 10);
+                    const data = asignadosMap.get(fecha);
+                    if (!data) return;
+
+                    const aseo = (data.aseo || 0) > 0;
+                    const conserje = (data.conserje || 0) > 0;
+
+                    if (aseo && conserje) {
+                        arg.el.style.background = "linear-gradient(90deg, #2e7d32 50%, #1565c0 50%)";
+                        arg.el.style.color = "white";
+                        arg.el.style.borderRadius = "10px";
+                    } else if (aseo) {
+                        arg.el.style.backgroundColor = "#2e7d32";
+                        arg.el.style.color = "white";
+                        arg.el.style.borderRadius = "10px";
+                    } else if (conserje) {
+                        arg.el.style.backgroundColor = "#1565c0";
+                        arg.el.style.color = "white";
+                        arg.el.style.borderRadius = "10px";
+                    }
+                }
+            });
+            asignadosCalendar.render();
+        }
+
+        function hookMesAnio() {
+            // OJO: usa los IDs reales de tus selects de mes/año en lista-comprobantes
+            const mesEl = document.getElementById("mesPago");   // cámbialo si tu id es otro
+            const anioEl = document.getElementById("anioPago"); // cámbialo si tu id es otro
+
+            if (mesEl) mesEl.addEventListener("change", cargarAsignados);
+            if (anioEl) anioEl.addEventListener("change", cargarAsignados);
+        }
+
+        async function cargarAsignados() {
+            const mesEl = document.getElementById("mesPago");   // cámbialo si tu id es otro
+            const anioEl = document.getElementById("anioPago"); // cámbialo si tu id es otro
+
+            if (!mesEl || !anioEl) return;
+
+            const mes = mesEl.value;
+            const anio = anioEl.value;
+            if (!mes || !anio) return;
+
+            const url = `/api/empresas/${empresaId}/turnos/resumen?anio=${anio}&mes=${mes}`;
+            const res = await fetch(url);
+            if (!res.ok) return;
+
+            const data = await res.json();
+
+            asignadosMap = new Map();
+            data.forEach(d => {
+                const fecha = String(d.fecha);
+                asignadosMap.set(fecha, { aseo: d.aseo, conserje: d.conserje });
+            });
+
+            asignadosCalendar.gotoDate(`${anio}-${String(mes).padStart(2, '0')}-01`);
+            asignadosCalendar.render();
+        }
+    </script>
 </body>
+
 </html>

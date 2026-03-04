@@ -2,6 +2,8 @@ package com.integrainmo.turnos;
 
 import jakarta.persistence.*;
 import java.util.Set;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Entity
 public class Trabajador {
@@ -28,4 +30,9 @@ public class Trabajador {
 
     public void setNombre(String nombre) { this.nombre = nombre; }
     public void setEmpresas(Set<Empresa> empresas) { this.empresas = empresas; }
+@Enumerated(EnumType.STRING)
+private Cargo cargo;
+
+public Cargo getCargo() { return cargo; }
+public void setCargo(Cargo cargo) { this.cargo = cargo; }
 }

@@ -47,6 +47,7 @@ public class ComprobanteController {
             @PathVariable Long id,
             @RequestParam(required = false) Long trabajadorId,
             @RequestParam(required = false) String nuevoTrabajadorNombre,
+            @RequestParam(required = false) Cargo nuevoTrabajadorCargo,
             @RequestParam int mes,
             @RequestParam int anio,
             @RequestParam int quincena,
@@ -55,20 +56,21 @@ public class ComprobanteController {
 
         Empresa empresa = empresaRepository.findById(id).orElseThrow();
 
-Trabajador trabajador;
+        Trabajador trabajador;
 
-if (trabajadorId != null) {
-    trabajador = trabajadorRepository.findById(trabajadorId).orElseThrow();
-} else {
-    trabajador = new Trabajador();
-    trabajador.setNombre(nuevoTrabajadorNombre);
-}
+        if (trabajadorId != null) {
+            trabajador = trabajadorRepository.findById(trabajadorId).orElseThrow();
+        } else {
+            trabajador = new Trabajador();
+            trabajador.setNombre(nuevoTrabajadorNombre);
+            trabajador.setCargo(nuevoTrabajadorCargo);
+        }
 
-// asegurar relación many-to-many
-trabajador.getEmpresas().add(empresa);
+        // asegurar relación many-to-many
+        trabajador.getEmpresas().add(empresa);
 
-// guardamos (si es nuevo lo crea, si existe actualiza relación)
-trabajadorRepository.save(trabajador);
+        // guardamos (si es nuevo lo crea, si existe actualiza relación)
+        trabajadorRepository.save(trabajador);
 
         Comprobante comprobante = new Comprobante();
         comprobante.setEmpresa(empresa);
