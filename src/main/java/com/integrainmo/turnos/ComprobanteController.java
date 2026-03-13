@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,7 @@ public class ComprobanteController {
         List<Comprobante> comprobantes = comprobanteRepository.findByEmpresaId(id);
 
         model.addAttribute("empresa", empresa);
+        model.addAttribute("empresaID", empresa.getId());
         model.addAttribute("trabajadores", empresa.getTrabajadores());
         model.addAttribute("comprobantes", comprobantes);
 
@@ -95,14 +98,32 @@ public class ComprobanteController {
         return "redirect:/empresas/" + id + "/comprobantes";
     }
 
+    private final ComprobantePdfService comprobantePdfService;
+
+    @GetMapping("/comprobantes/{id}/pdf")
+    public ResponseEntity<byte[]> descargarPdf(@PathVariable Long id) {
+
+        Comprobante comprobante = comprobanteRepository
+                .findById(id)
+                .orElseThrow();
+
+        byte[] pdf = comprobantePdfService.generarPdf(comprobante);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "inline; filename=comprobante.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
     public ComprobanteController(
             ComprobanteRepository comprobanteRepository,
             EmpresaRepository empresaRepository,
-            TrabajadorRepository trabajadorRepository) {
+            TrabajadorRepository trabajadorRepository,
+            ComprobantePdfService comprobantePdfService) {
 
         this.comprobanteRepository = comprobanteRepository;
         this.empresaRepository = empresaRepository;
         this.trabajadorRepository = trabajadorRepository;
+        this.comprobantePdfService = comprobantePdfService;
     }
-
 }

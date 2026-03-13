@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,8 +25,8 @@ public class Comprobante {
     private Empresa empresa;
     @ManyToOne
     private Trabajador trabajador;
-    @OneToMany(mappedBy = "comprobante", cascade = CascadeType.ALL)
-private List<Turno> turnos;
+    @OneToMany(mappedBy = "comprobante", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Turno> turnos = new ArrayList<>();
 
     public Comprobante() {
     }
@@ -51,6 +53,14 @@ private List<Turno> turnos;
         return trabajador;
     }
 
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public List<Turno> getTurnos() {
+        return turnos;
+    }
+
     public void setAnio(int anio) {
         this.anio = anio;
     }
@@ -63,17 +73,30 @@ private List<Turno> turnos;
         this.trabajador = trabajador;
     }
 
-    public void setEmpresa(Empresa empresa2) {
-        throw new UnsupportedOperationException("Unimplemented method 'setEmpresa'");
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 
-    public void setTurnos(List<Turno> turnos2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setTurnos'");
+    private Integer quincena;
+
+    public Integer getQuincena() {
+        return quincena;
     }
 
-    public void setQuincena(int quincena) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setQuincena'");
+    public void setQuincena(Integer quincena) {
+        this.quincena = quincena;
+    }
+    // public void setEmpresa(Empresa empresa2) {
+    // throw new UnsupportedOperationException("Unimplemented method 'setEmpresa'");
+    // }
+
+    public void setTurnos(List<Turno> turnos) {
+        this.turnos = turnos;
+        if (turnos != null) {
+            for (Turno t : turnos) {
+                t.setComprobante(this);
+            }
+
+        }
     }
 }

@@ -63,7 +63,7 @@
     </style>
 </head>
 
-<body th:attr="data-empresa-id=${empresaId}">
+<body th:attr="data-empresa-id=${empresa.id}">
 
     <h1 th:text="'Comprobantes - ' + ${empresa.nombre}"></h1>
 
@@ -103,16 +103,30 @@
             <p><strong>Año:</strong>
                 <span th:text="${c.anio}"></span>
             </p>
-
+            <a class="btn-pdf" th:href="@{/comprobantes/{id}/pdf(id=${c.id})}" target="_blank">
+                Descargar PDF
+            </a>
         </div>
 
         <p th:if="${comprobantes.isEmpty()}">
             No hay comprobantes para ese filtro.
         </p>
 
-        <a th:href="@{/empresas/{id}/comprobantes/nuevo(id=${empresa.id})}" class="btn-nuevo">
+        <a href="#" class="btn-nuevo" onclick="irNuevoComprobante()">
             Generar nuevo comprobante
         </a>
+
+        <script th:inline="javascript">
+            function irNuevoComprobante() {
+                // intento 1: desde el model
+                const empresaId = /*[[${empresaId}]]*/ null;
+
+                // fallback: desde la URL actual /empresas/{id}/comprobantes
+                const id = empresaId ?? window.location.pathname.split("/")[2];
+
+                window.location.href = `/empresas/${id}/comprobantes/nuevo`;
+            }
+        </script>
     </div>
     <div class="layout">
         <div class="main">
@@ -194,33 +208,62 @@
             color: rgb(128, 0, 32);
             border: 2px solid rgb(128, 0, 32);
         }
+
+        .btn-pdf {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgb(128, 0, 32);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .btn-pdf:hover {
+            background: #fff;
+            color: rgb(128, 0, 32);
+            border: 2px solid rgb(128, 0, 32);
+        }
     </style>
     <script>
         const empresaId = document.body.dataset.empresaId;
 
         let asignadosCalendar;
-        let asignadosMap = new Map(); // 'YYYY-MM-DD' -> {aseo, conserje}
+        let asignadosMap = new Map();
 
         document.addEventListener('DOMContentLoaded', () => {
             initAsignadosCalendar();
-            hookMesAnio();
-            cargarAsignados(); // carga inicial si hay valores
         });
 
         function initAsignadosCalendar() {
             const el = document.getElementById("calendarAsignados");
+
             asignadosCalendar = new FullCalendar.Calendar(el, {
                 initialView: 'dayGridMonth',
                 height: 'auto',
                 selectable: false,
                 headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+
+                datesSet: function (info) {
+                    const fecha = info.view.currentStart; // ← clave
+                    const anio = fecha.getFullYear();
+                    const mes = fecha.getMonth() + 1;
+
+                    cargarAsignados(anio, mes);
+                },
+
                 dayCellDidMount: function (arg) {
-                    const fecha = arg.date.toISOString().slice(0, 10);
+                    const y = arg.date.getFullYear();
+                    const m = String(arg.date.getMonth() + 1).padStart(2, '0');
+                    const d = String(arg.date.getDate()).padStart(2, '0');
+                    const fecha = `${y}-${m}-${d}`;
+
                     const data = asignadosMap.get(fecha);
                     if (!data) return;
 
-                    const aseo = (data.aseo || 0) > 0;
-                    const conserje = (data.conserje || 0) > 0;
+                    const aseo = Number(data.aseo || 0) > 0;
+                    const conserje = Number(data.conserje || 0) > 0;
 
                     if (aseo && conserje) {
                         arg.el.style.background = "linear-gradient(90deg, #2e7d32 50%, #1565c0 50%)";
@@ -237,42 +280,29 @@
                     }
                 }
             });
+
             asignadosCalendar.render();
         }
 
-        function hookMesAnio() {
-            // OJO: usa los IDs reales de tus selects de mes/año en lista-comprobantes
-            const mesEl = document.getElementById("mesPago");   // cámbialo si tu id es otro
-            const anioEl = document.getElementById("anioPago"); // cámbialo si tu id es otro
+        function cargarAsignados(anio, mes) {
+            fetch(`/api/empresas/${empresaId}/turnos/resumen?anio=${anio}&mes=${mes}`)
+                .then(r => r.json())
+                .then(data => {
+                    console.log("Resumen turnos:", data); // ← útil para depurar
+                    asignadosMap = new Map();
 
-            if (mesEl) mesEl.addEventListener("change", cargarAsignados);
-            if (anioEl) anioEl.addEventListener("change", cargarAsignados);
-        }
+                    data.forEach(d => {
+                        asignadosMap.set(d.fecha, {
+                            aseo: d.aseo,
+                            conserje: d.conserje
+                        });
+                    });
 
-        async function cargarAsignados() {
-            const mesEl = document.getElementById("mesPago");   // cámbialo si tu id es otro
-            const anioEl = document.getElementById("anioPago"); // cámbialo si tu id es otro
-
-            if (!mesEl || !anioEl) return;
-
-            const mes = mesEl.value;
-            const anio = anioEl.value;
-            if (!mes || !anio) return;
-
-            const url = `/api/empresas/${empresaId}/turnos/resumen?anio=${anio}&mes=${mes}`;
-            const res = await fetch(url);
-            if (!res.ok) return;
-
-            const data = await res.json();
-
-            asignadosMap = new Map();
-            data.forEach(d => {
-                const fecha = String(d.fecha);
-                asignadosMap.set(fecha, { aseo: d.aseo, conserje: d.conserje });
-            });
-
-            asignadosCalendar.gotoDate(`${anio}-${String(mes).padStart(2, '0')}-01`);
-            asignadosCalendar.render();
+                    // fuerza reconstrucción visual
+                    asignadosCalendar.destroy();
+                    initAsignadosCalendar();
+                })
+                .catch(err => console.error("Error cargando asignados:", err));
         }
     </script>
 </body>
